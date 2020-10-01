@@ -1,0 +1,128 @@
+version: "3.8"
+
+services:
+  redis-master-1:
+    container_name: redis-master-1
+    # image: redis:latest
+    restart: on-failure
+    build:
+      context: ./docker/redis
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.10
+    sysctls:
+      - net.core.somaxconn=1024
+    volumes:
+      - ./redis:/var/redis
+    command: redis-server /var/redis/redis-master-1.conf
+
+  redis-master-2:
+    container_name: redis-master-2
+    restart: on-failure
+    # image: redis:latest
+    build:
+      context: ./docker/redis
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.11
+    sysctls:
+      - net.core.somaxconn=1024
+    volumes:
+      - ./redis:/var/redis
+    command: redis-server /var/redis/redis-master-2.conf
+
+  redis-master-3:
+    container_name: redis-master-3
+    restart: on-failure
+    # image: redis:latest
+    build:
+      context: ./docker/redis
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.12
+    sysctls:
+      - net.core.somaxconn=1024
+    volumes:
+      - ./redis:/var/redis
+    command: redis-server /var/redis/redis-master-3.conf
+
+
+  redis-slave-1:
+    container_name: redis-slave-1
+    restart: on-failure
+    # image: redis:latest
+    build:
+      context: ./docker/redis
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.13
+    sysctls:
+      - net.core.somaxconn=1024
+    depends_on:
+      - redis-master-1
+    volumes:
+      - ./redis:/var/redis
+    command: redis-server /var/redis/redis-slave-1.conf
+
+  redis-slave-2:
+    container_name: redis-slave-2
+    restart: on-failure
+    # image: redis:latest
+    build:
+      context: ./docker/redis
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.14
+    sysctls:
+      - net.core.somaxconn=1024
+    depends_on:
+      - redis-master-2
+    volumes:
+      - ./redis:/var/redis
+    command: redis-server /var/redis/redis-slave-2.conf
+
+  redis-slave-3:
+    container_name: redis-slave-3
+    restart: on-failure
+    # image: redis:latest
+    build:
+      context: ./docker/redis
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.15
+    sysctls:
+      - net.core.somaxconn=1024
+    depends_on:
+      - redis-master-3
+    volumes:
+      - ./redis:/var/redis
+    command: redis-server /var/redis/redis-slave-3.conf
+
+  redis-stat:
+    container_name: redis-stat
+    restart: on-failure
+    build:
+      context: ./docker/redis-stat
+    ports:
+      - 8080:63790
+    depends_on:
+      - redis-master-1
+      - redis-master-2
+      - redis-master-3
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.50
+    command: redis-stat --server 10.5.0.10 10.5.0.11 10.5.0.12 10.5.0.13 10.5.0.14 10.5.0.15
+
+networks:
+  redis-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
+volumes:
+  redis:
