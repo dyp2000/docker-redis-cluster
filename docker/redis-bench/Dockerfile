@@ -14,7 +14,4 @@ ENV LANG ru_RU.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL ru_RU.UTF-8
 
-EXPOSE 6379
-EXPOSE 16379
-
-CMD ["redis-server"]
+CMD [ "/usr/local/bin/redis-benchmark", "-l", "-h", "10.5.0.10", "-p", "6379", "--cluster" ]

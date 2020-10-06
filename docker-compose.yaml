@@ -7,6 +7,8 @@ services:
     restart: on-failure
     build:
       context: ./docker/redis
+    # ports:
+    #   - 7000:6379
     networks:
       redis-net:
         ipv4_address: 10.5.0.10
@@ -22,6 +24,8 @@ services:
     # image: redis:latest
     build:
       context: ./docker/redis
+    # ports:
+    #   - 7001:6379
     networks:
       redis-net:
         ipv4_address: 10.5.0.11
@@ -37,6 +41,8 @@ services:
     # image: redis:latest
     build:
       context: ./docker/redis
+    # ports:
+    #   - 7002:6379
     networks:
       redis-net:
         ipv4_address: 10.5.0.12
@@ -46,13 +52,14 @@ services:
       - ./redis:/var/redis
     command: redis-server /var/redis/redis-master-3.conf
 
-
   redis-slave-1:
     container_name: redis-slave-1
     restart: on-failure
     # image: redis:latest
     build:
       context: ./docker/redis
+    # ports:
+    #   - 7003:6379
     networks:
       redis-net:
         ipv4_address: 10.5.0.13
@@ -70,6 +77,8 @@ services:
     # image: redis:latest
     build:
       context: ./docker/redis
+    # ports:
+    #   - 7004:6379
     networks:
       redis-net:
         ipv4_address: 10.5.0.14
@@ -87,6 +96,8 @@ services:
     # image: redis:latest
     build:
       context: ./docker/redis
+    # ports:
+    #   - 7005:6379
     networks:
       redis-net:
         ipv4_address: 10.5.0.15
@@ -97,6 +108,50 @@ services:
     volumes:
       - ./redis:/var/redis
     command: redis-server /var/redis/redis-slave-3.conf
+
+  redis-proxy:
+    container_name: redis-proxy
+    # build: ./docker/haproxy
+    image: haproxy:2.2
+    restart: always
+    ports:
+      - 6379:6379
+      # - 9000:9000
+    depends_on:
+      - redis-master-1
+      - redis-master-2
+      - redis-master-3
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.20
+
+  redis-bech:
+    container_name: redis-bench
+    restart: on-failure
+    # image: redis:latest
+    build:
+      context: ./docker/redis-bench
+    networks:
+      redis-net:
+        ipv4_address: 10.5.0.30
+    sysctls:
+      - net.core.somaxconn=1024
+    depends_on:
+      - redis-master-1
+      - redis-master-2
+      - redis-master-3
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    tty: true
+    # volumes:
+    #   - ./redis:/var/redis
+    command: /usr/local/bin/redis-benchmark -l -h 10.5.0.10 -p 6379 --cluster
 
   redis-stat:
     container_name: redis-stat

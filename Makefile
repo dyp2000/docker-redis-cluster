@@ -26,7 +26,7 @@ start: up ## Запустить проект
 	@if [ "$(MASTERS_COUNT)" == "1" ] ; then \
 		$(echo_bin) "\n\033[33mREDIS CLUSER starting...\033[0m"; \
 		$(docker_bin) exec -t redis-master-1 redis-cli --cluster create \
-		10.5.0.10:6379 10.5.0.11:6379 10.5.0.12:6379 10.5.0.13:6379 10.5.0.14:6379 10.5.0.15:6379 \
+		10.5.0.10:6379 10.5.0.11:6379 10.5.0.12:6379 10.5.0.13:6379 10.5.0.14:6379 10.5.0.15:6379\
 		--cluster-replicas 1 --cluster-yes; \
 	else \
 		$(echo_bin) "\n\033[33mREDIS CLUSER already started...\033[0m"; \
