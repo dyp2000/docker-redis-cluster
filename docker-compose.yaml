@@ -112,11 +112,10 @@ services:
   redis-proxy:
     container_name: redis-proxy
     # build: ./docker/haproxy
-    image: haproxy:2.2
-    restart: always
+    image: haproxy:latest
+    restart: on-failure
     ports:
       - 6379:6379
-      # - 9000:9000
     depends_on:
       - redis-master-1
       - redis-master-2
@@ -126,6 +125,10 @@ services:
       - redis-slave-3
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    tty: true
+    # command: /bin/bash
+    command: haproxy -d -V -f /usr/local/etc/haproxy/haproxy.cfg
+
     networks:
       redis-net:
         ipv4_address: 10.5.0.20
@@ -151,7 +154,8 @@ services:
     tty: true
     # volumes:
     #   - ./redis:/var/redis
-    command: /usr/local/bin/redis-benchmark -l -h 10.5.0.10 -p 6379 --cluster
+    command: /bin/bash
+    # command: /usr/local/bin/redis-benchmark -l -h 10.5.0.10 -p 6379 --cluster
 
   redis-stat:
     container_name: redis-stat
@@ -176,6 +180,7 @@ networks:
   redis-net:
     driver: bridge
     ipam:
+      driver: default
       config:
         - subnet: 10.5.0.0/16
           gateway: 10.5.0.1
